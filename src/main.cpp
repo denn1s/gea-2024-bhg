@@ -62,6 +62,8 @@ int main() {
       SDL_Delay(frameDuration - actualFrameDuration);
     }
 
+    // draw poligon 1
+
     // fps calculation
     frameCount++;
     Uint32 currentTime = SDL_GetTicks();
