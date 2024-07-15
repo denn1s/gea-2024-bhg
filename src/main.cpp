@@ -4,7 +4,8 @@
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
-const int MAX_FPS = 5;
+const int MAX_FPS = 60;
+const int BALL_SPEED = 100;
 
 int main() {
   SDL_Init(SDL_INIT_EVERYTHING);
@@ -21,6 +22,7 @@ int main() {
   Uint32 frameCount = 1;
   Uint32 frameStartTimestamp;
   Uint32 frameEndTimestamp;
+  Uint32 lastFrameTime = SDL_GetTicks();
   Uint32 lastUpdateTime = 0;
   float frameDuration = (1.0/MAX_FPS) * 1000.0;
   float actualFrameDuration;
@@ -28,6 +30,11 @@ int main() {
   
   while (!quit) {
     frameStartTimestamp = SDL_GetTicks();
+
+    // delta time
+    Uint32 currentFrameTime = SDL_GetTicks();
+    float dT = (currentFrameTime - lastFrameTime) / 1000.0; 
+    lastFrameTime = currentFrameTime;
 
     // poll events
     while (SDL_PollEvent(&e) != 0) {
@@ -37,10 +44,10 @@ int main() {
     }
     // update
     if (x < SCREEN_WIDTH) {
-      x++;
+      x = x + BALL_SPEED * dT;  // pixeles segundo por frame
     }
     if (y < SCREEN_HEIGHT) {
-      y++;
+      y = y + BALL_SPEED * dT;
     }
 
     // render
