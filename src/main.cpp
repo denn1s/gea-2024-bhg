@@ -1,4 +1,3 @@
-#include <SDL_timer.h>
 #include <string>
 #include <print>
 #include <SDL.h>
@@ -6,7 +5,6 @@
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 const int MAX_FPS = 5;
-Uint32 lastUpdateTime = 0;
 
 int main() {
   SDL_Init(SDL_INIT_EVERYTHING);
@@ -23,6 +21,7 @@ int main() {
   Uint32 frameCount = 1;
   Uint32 frameStartTimestamp;
   Uint32 frameEndTimestamp;
+  Uint32 lastUpdateTime = 0;
   float frameDuration = (1.0/MAX_FPS) * 1000.0;
   float actualFrameDuration;
   int FPS = MAX_FPS;
