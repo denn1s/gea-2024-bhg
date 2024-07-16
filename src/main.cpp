@@ -1,3 +1,6 @@
+#include <SDL_keyboard.h>
+#include <SDL_render.h>
+#include <SDL_scancode.h>
 #include <string>
 #include <print>
 #include <SDL.h>
@@ -6,6 +9,93 @@ const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 const int MAX_FPS = 60;
 const int BALL_SPEED = 100;
+const int BALL_SIZE = 100;
+
+struct Rect {
+  SDL_Rect rect = {0, 0, 100, 100};
+  int vx = 0;
+  int vy = 0;
+  SDL_Color color = {0xFF, 0xFF, 0xFF, 0xFF};
+};
+
+SDL_Color red = {0xFF, 0x00, 0x00, 0xFF};
+SDL_Color blue = {0x00, 0x00, 0xFF, 0xFF};
+
+Rect ball1 = {{0, 0, 100, 100}, 0, 0, red};
+Rect ball2 = {{SCREEN_WIDTH - BALL_SIZE, 0, 100, 100}, -BALL_SPEED, BALL_SPEED, blue};
+
+void renderRect(SDL_Renderer* renderer, Rect& ball) {
+  SDL_SetRenderDrawColor(renderer, ball.color.r, ball.color.g, ball.color.b, ball.color.a);
+  SDL_RenderFillRect(renderer, &ball.rect);
+}
+
+bool checkColission(const SDL_Rect& a, const SDL_Rect& b) {
+  return (
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y 
+  );
+}
+
+void handleInput(SDL_Event& e) {
+  // resolve
+  const Uint8* ks = SDL_GetKeyboardState(NULL);
+
+  ball1.vx = 0;
+  ball1.vy = 0;
+
+  if (ks[SDL_SCANCODE_A]) {
+    ball1.vy = -BALL_SPEED;
+  }
+  if (ks[SDL_SCANCODE_W]) {
+    ball1.vy = BALL_SPEED;
+  }
+  if (ks[SDL_SCANCODE_S]) {
+    ball1.vx = BALL_SPEED;
+  }
+  if (ks[SDL_SCANCODE_D]) {
+    ball1.vx = -BALL_SPEED;
+  }
+}
+
+void update(float dT) {
+  if (ball1.rect.x < 0) {
+    ball1.vx *= -1;
+  }
+  if (ball2.rect.x < 0) {
+    ball2.vx *= -1;
+  }
+  if (ball1.rect.y < 0) {
+    ball1.vy *= -1;
+  }
+  if (ball2.rect.y < 0) {
+    ball2.vy *= -1;
+  }
+  if (ball1.rect.x + ball1.rect.w > SCREEN_WIDTH) {
+    ball1.vx *= -1;
+  }
+  if (ball2.rect.x + ball2.rect.w > SCREEN_WIDTH) {
+    ball2.vx *= -1;
+  }
+  if (ball1.rect.y + ball1.rect.h > SCREEN_HEIGHT) {
+    ball1.vy *= -1;
+  }
+  if (ball2.rect.y + ball2.rect.h > SCREEN_HEIGHT) {
+    ball2.vy *= -1;
+  }
+
+  if (checkColission(ball1.rect, ball2.rect)) {
+    std::swap(ball1.vx, ball2.vx);
+    std::swap(ball1.vy, ball2.vy);
+  }
+
+  ball1.rect.x += ball1.vx * dT;
+  ball1.rect.y += ball1.vy * dT;
+  ball2.rect.x += ball2.vx * dT;
+  ball2.rect.y += ball2.vy * dT;
+
+}
 
 int main() {
   SDL_Init(SDL_INIT_EVERYTHING);
@@ -15,9 +105,6 @@ int main() {
 
   bool quit = false;
   SDL_Event e;
-
-  int x = 0;
-  int y = 0;
 
   Uint32 frameCount = 1;
   Uint32 frameStartTimestamp;
@@ -41,26 +128,18 @@ int main() {
       if (e.type == SDL_QUIT) {
         quit = true;
       }
+      handleInput(e);
     }
     // update
-    if (x < SCREEN_WIDTH) {
-      x = x + BALL_SPEED * dT;  // pixeles segundo por frame
-    }
-    if (y < SCREEN_HEIGHT) {
-      y = y + BALL_SPEED * dT;
-    }
-
+    update(dT);
     // render
     SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
     SDL_RenderClear(renderer);
 
-    SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-    SDL_Rect fillRect = {x, y, 100, 100};
-    SDL_RenderFillRect(renderer, &fillRect);
-
+    renderRect(renderer, ball1);
+    renderRect(renderer, ball2);
     SDL_RenderPresent(renderer);
-
-
+    
     frameEndTimestamp = SDL_GetTicks();
     actualFrameDuration = frameEndTimestamp - frameStartTimestamp;
 
