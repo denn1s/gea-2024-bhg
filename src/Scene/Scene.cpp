@@ -16,15 +16,15 @@ Scene::~Scene() {
   std::print("Scene Destroyed: {}\n", name);
 }
 
-Entity* Scene::createEntity(const std::string& name) {
+Entity* Scene::createEntity(const std::string& n) {
   Entity* entity = new Entity(r.create(), this);
-  entity->addComponent<NameComponent>(name);
+  entity->addComponent<NameComponent>(n);
   return entity;
 }
 
-Entity* Scene::createEntity(const std::string& name, int x, int y) {
+Entity* Scene::createEntity(const std::string& n, int x, int y) {
   Entity* entity = new Entity(r.create(), this);
-  entity->addComponent<NameComponent>(name);
+  entity->addComponent<NameComponent>(n);
   entity->addComponent<PositionComponent>(x, y);
 
   return entity;

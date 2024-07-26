@@ -2,7 +2,7 @@
 #include <string>
 
 struct NameComponent {
-  const std::string& name;
+  const std::string name;
 };
 
 struct PositionComponent {
