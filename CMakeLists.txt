@@ -20,6 +20,7 @@ add_executable(
 find_package(SDL2 REQUIRED)
 
 target_include_directories(game  
+  PUBLIC src
   PUBLIC ${SDL2_INCLUDE_DIRS}
 )
 

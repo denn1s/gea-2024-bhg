@@ -31,9 +31,25 @@ Entity* Scene::createEntity(const std::string& n, int x, int y) {
 }
 
 void Scene::setup() {
-  std::print("Scene setting up!\n");
-
   for (auto sys: setupSystems) {
     sys->run();
+  }
+}
+
+void Scene::update(float dT) {
+  for (auto sys: updateSystems) {
+    sys->run(dT);
+  }
+}
+
+void Scene::processEvents(SDL_Event e) {
+  for (auto sys: eventSystems) {
+    sys->run(e);
+  }
+}
+
+void Scene::render(SDL_Renderer* render) {
+  for (auto sys: renderSystems) {
+    sys->run(render);
   }
 }
