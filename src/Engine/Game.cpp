@@ -84,10 +84,9 @@ void Game::handleEvents()
     }
 
     if (currentScene != nullptr) {
-      currentScene->update(dT);
+      currentScene->processEvents(event);
     }
 
-    currentScene->processEvents(event);
   }
 }
 

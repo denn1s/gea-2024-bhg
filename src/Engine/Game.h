@@ -46,7 +46,7 @@ class Game {
 
     template<typename T>
     void addSetupSystem(Scene* scene, auto&&... args) {
-        auto system = std::make_shared<T>(std::forward<decltype(args)>(args)...);
+        auto system = new T(std::forward<decltype(args)>(args)...);
         system->setScene(scene);
         scene->setupSystems.push_back(system);
     }

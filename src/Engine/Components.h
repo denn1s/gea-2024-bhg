@@ -9,3 +9,8 @@ struct PositionComponent {
   int x;
   int y;
 };
+
+struct VelocityComponent {
+  int x;
+  int y;
+};
