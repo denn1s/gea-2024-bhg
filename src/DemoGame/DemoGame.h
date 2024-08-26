@@ -200,7 +200,7 @@ public:
     const std::string& bgfile = "assets/Backgrounds/stars-sheet.png";
     background->addComponent<PositionComponent>(0, 0);
     background->addComponent<TextureComponent>(bgfile);
-    background->addComponent<SpriteComponent>(bgfile, 1024, 768, 1, 3, 500);
+    background->addComponent<SpriteComponent>(bgfile, 1024, 768, 1, 3, 1500);
     background->addComponent<BackgroundComponent>(bgfile);
   }
 };
