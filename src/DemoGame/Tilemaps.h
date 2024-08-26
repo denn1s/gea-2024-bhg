@@ -24,11 +24,11 @@ public:
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-      {0, 0, 0, 0, 1, 1, 0, 0, 0, 0},
-      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 1, 1, 1, 0, 0, 0},
+      {0, 0, 0, 0, 1, 0, 1, 0, 0, 0},
+      {0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
+      {0, 0, 0, 0, 0, 0, 1, 1, 0, 0},
+      {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     };
@@ -39,6 +39,11 @@ public:
 };
 
 class AutoTilingSetupSystem : public SetupSystem {
+private:
+    bool isTile(const std::vector<std::vector<int>>& map, int x, int y) {
+        return (x >= 0 && x < map[0].size() && y >= 0 && y < map.size() && map[y][x] == 1);
+    }
+
 public:
     void run() override {
         auto view = scene->r.view<TilemapComponent>();
@@ -46,27 +51,28 @@ public:
         for (auto entity : view) {
             auto& tilemap = view.get<TilemapComponent>(entity);
             
+            const size_t mapHeight = tilemap.map.size();
+            const size_t mapWidth = tilemap.map[0].size();
+            
             std::vector<std::vector<int>> newMap = tilemap.map;
             
-            for (size_t y = 0; y < tilemap.map.size(); ++y) {
-                for (size_t x = 0; x < tilemap.map[y].size(); ++x) {
+            for (size_t y = 0; y < mapHeight; ++y) {
+                for (size_t x = 0; x < mapWidth; ++x) {
                     if (tilemap.map[y][x] == 1) {
+                        bool north = isTile(tilemap.map, x, y-1);
+                        bool south = isTile(tilemap.map, x, y+1);
+                        bool west = isTile(tilemap.map, x-1, y);
+                        bool east = isTile(tilemap.map, x+1, y);
+
                         int mask = 0;
-                        
-                        // Check North
-                        if (y > 0 && tilemap.map[y-1][x] == 1) mask |= 1;
-                        // Check West
-                        if (x > 0 && tilemap.map[y][x-1] == 1) mask |= 2;
-                        // Check East
-                        if (x < tilemap.map[y].size() - 1 && tilemap.map[y][x+1] == 1) mask |= 4;
-                        // Check South
-                        if (y < tilemap.map.size() - 1 && tilemap.map[y+1][x] == 1) mask |= 8;
-                        
-                        /* std::cout << "mask: " << mask << std::endl; */
-                        // Convert mask to tileset index (1-based)
+                        if (north) mask |= 1;
+                        if (west) mask |= 2;
+                        if (east) mask |= 4;
+                        if (south) mask |= 8;
+
                         newMap[y][x] = mask;
                     } else {
-                        newMap[y][x] = -1;
+                        newMap[y][x] = -1;  // Empty space
                     }
                 }
             }
@@ -74,6 +80,76 @@ public:
             tilemap.map = newMap;
         }
     }
+};
+
+class AdvancedAutoTilingSetupSystem : public SetupSystem {
+private:
+  std::unordered_map<int, int> maskToTileIndex = {
+    {2, 1}, {8, 2}, {10, 3}, {11, 4}, {16, 5}, {18, 6}, {22, 7}, {24, 8},
+    {26, 9}, {27, 10}, {30, 11}, {31, 12}, {64, 13}, {66, 14}, {72, 15},
+    {74, 16}, {75, 17}, {80, 18}, {82, 19}, {86, 20}, {88, 21}, {90, 22},
+    {91, 23}, {94, 24}, {95, 25}, {104, 26}, {106, 27}, {107, 28}, {120, 29},
+    {122, 30}, {123, 31}, {126, 32}, {127, 33}, {208, 34}, {210, 35},
+    {214, 36}, {216, 37}, {218, 38}, {219, 39}, {222, 40}, {223, 41},
+    {248, 42}, {250, 43}, {251, 44}, {254, 45}, {255, 46}, {0, 47}
+  };
+
+
+  bool isTile(const std::vector<std::vector<int>>& map, int x, int y) {
+    return (x >= 0 && x < map[0].size() && y >= 0 && y < map.size() && map[y][x] == 1);
+  }
+
+public:
+  void run() override {
+    auto view = scene->r.view<TilemapComponent>();
+
+    for (auto entity : view) {
+      auto& tilemap = view.get<TilemapComponent>(entity);
+
+      const size_t mapHeight = tilemap.map.size();
+      const size_t mapWidth = tilemap.map[0].size();
+
+      std::vector<std::vector<int>> newMap = tilemap.map;
+
+      for (size_t y = 0; y < mapHeight; ++y) {
+        for (size_t x = 0; x < mapWidth; ++x) {
+          if (tilemap.map[y][x] == 1) {
+            int mask = 0;
+
+            bool north = isTile(tilemap.map, x, y-1);
+            bool south = isTile(tilemap.map, x, y+1);
+            bool west = isTile(tilemap.map, x-1, y);
+            bool east = isTile(tilemap.map, x+1, y);
+
+            // Cardinal directions
+            if (north) mask |= 2;
+            if (west) mask |= 8;
+            if (east) mask |= 16;
+            if (south) mask |= 64;
+
+            // Corners (with redundancy check)
+            if (north && west && isTile(tilemap.map, x-1, y-1)) mask |= 1;
+            if (north && east && isTile(tilemap.map, x+1, y-1)) mask |= 4;
+            if (south && west && isTile(tilemap.map, x-1, y+1)) mask |= 32;
+            if (south && east && isTile(tilemap.map, x+1, y+1)) mask |= 128;
+
+            // Map the mask to the tile index
+            auto it = maskToTileIndex.find(mask);
+            if (it != maskToTileIndex.end()) {
+              newMap[y][x] = it->second;
+            } else {
+              // If the mask doesn't have a mapping, use a default tile
+              newMap[y][x] = 47;  // Assuming 47 is your default tile
+            }
+          } else {
+            newMap[y][x] = -1;  // Empty space
+          }
+        }
+      }
+
+      tilemap.map = newMap;
+    }
+  }
 };
 
 class TilemapRenderSystem : public RenderSystem {

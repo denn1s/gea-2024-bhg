@@ -96,6 +96,7 @@ public:
     
     addSetupSystem<TilemapSetupSystem>(sampleScene);
     addSetupSystem<AutoTilingSetupSystem>(sampleScene);
+    /* addSetupSystem<AdvancedAutoTilingSetupSystem>(sampleScene); */
 
     addSetupSystem<TextureSetupSystem>(sampleScene);
     addEventSystem<MovementInputSystem>(sampleScene);
