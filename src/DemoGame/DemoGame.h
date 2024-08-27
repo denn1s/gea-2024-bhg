@@ -1,3 +1,4 @@
+#include "DemoGame/Tilemap.h"
 #include "Engine/Game.h"
 #include "Engine/Scene.h"
 #include "Engine/Entity.h"
@@ -91,12 +92,16 @@ public:
     sampleScene = new Scene("SAMPLE SCENE", r, renderer);
     addSetupSystem<SquareSpawnSetupSystem>(sampleScene);
     addSetupSystem<BackgroundSetupSystem>(sampleScene);
+    addSetupSystem<TilemapSetupSystem>(sampleScene);
+    /* addSetupSystem<AutoTilingSetupSystem>(sampleScene); */
+    addSetupSystem<AdvancedAutoTilingSetupSystem>(sampleScene);
     addSetupSystem<TextureSetupSystem>(sampleScene);
     addEventSystem<MovementInputSystem>(sampleScene);
     addUpdateSystem<SpriteMovementSystem>(sampleScene);
     addUpdateSystem<MovementSystem>(sampleScene);
     addUpdateSystem<SpriteAnimationSystem>(sampleScene);
     addRenderSystem<SpriteRenderSystem>(sampleScene);
+    addRenderSystem<TilemapRenderSystem>(sampleScene);
 
     setScene(sampleScene);
   }
