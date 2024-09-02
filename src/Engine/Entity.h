@@ -10,12 +10,10 @@ public:
   Entity(entt::entity h, Scene* s)
     : handle(h), scene(s)
   {
-    std::print("Entity Created\n");
   }
 
   ~Entity() {
     scene->r.destroy(handle);
-    std::print("Enttiy Destroyed\n");
   }
 
   template<typename T>
