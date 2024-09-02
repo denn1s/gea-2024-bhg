@@ -10,10 +10,8 @@
 #include <entt/entt.hpp>
 #include "Sprites.h"
 #include "Backgrounds.h"
-
-struct PlayerComponent {
-
-};
+#include "Colliders.h"
+#include "Player.h"
 
 class SquareSpawnSetupSystem : public SetupSystem {
   void run() {
@@ -22,6 +20,7 @@ class SquareSpawnSetupSystem : public SetupSystem {
     square->addComponent<VelocityComponent>(300);
     square->addComponent<TextureComponent>("assets/Sprites/cat.png");
     square->addComponent<SpriteComponent>("assets/Sprites/cat.png", 8, 8, 10, 8, 1000);
+    square->addComponent<BoxColliderComponent>(SDL_Rect{0, 0, 32, 32}, SDL_Color{255, 0, 0, 255});
   }
 };
 
@@ -93,15 +92,21 @@ public:
     addSetupSystem<SquareSpawnSetupSystem>(sampleScene);
     addSetupSystem<BackgroundSetupSystem>(sampleScene);
     addSetupSystem<TilemapSetupSystem>(sampleScene);
-    /* addSetupSystem<AutoTilingSetupSystem>(sampleScene); */
     addSetupSystem<AdvancedAutoTilingSetupSystem>(sampleScene);
     addSetupSystem<TextureSetupSystem>(sampleScene);
+    addSetupSystem<TilemapColliderSetupSystem>(sampleScene);
+    
     addEventSystem<MovementInputSystem>(sampleScene);
     addUpdateSystem<SpriteMovementSystem>(sampleScene);
+
+    addUpdateSystem<PlayerWallCollisionDetectionSystem>(sampleScene);
+    addUpdateSystem<PlayerWallHitResponseSystem>(sampleScene);
+
     addUpdateSystem<MovementSystem>(sampleScene);
     addUpdateSystem<SpriteAnimationSystem>(sampleScene);
     addRenderSystem<SpriteRenderSystem>(sampleScene);
     addRenderSystem<TilemapRenderSystem>(sampleScene);
+    addRenderSystem<ColliderRenderSystem>(sampleScene);
 
     setScene(sampleScene);
   }
