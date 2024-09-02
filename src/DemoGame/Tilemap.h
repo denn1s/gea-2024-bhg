@@ -49,22 +49,18 @@ public:
     int tileSize = 8;
     int tileScale = 8;
     std::vector<Tile> tiles;
-    std::cout << "TILeSETUP" << std::endl;
     for (int i = 0; i < initialMap.size(); i++) {
       TileType type = TileType::NONE;
       switch(initialMap[i]) {
         case 1:
-          std::cout << "1";
           type = TileType::WALL;
           break;
         case 0:
-          std::cout << "0";
           break;
       }
       Tile tile = Tile{i, 0, type};
       tiles.push_back(tile);
     }
-    std::cout << std::endl << "TILeSETUP DoNE" << std::endl;
 
     Entity* tilemapEntity = scene->createEntity("TILEMAP");
     tilemapEntity->addComponent<TilemapComponent>(
