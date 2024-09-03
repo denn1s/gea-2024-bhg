@@ -8,6 +8,7 @@
 enum class TileType {
   NONE,
   WALL,
+  TRIGGER,
 };
 
 struct Tile {
@@ -107,7 +108,6 @@ public:
       for (int y = 0; y < mapHeight; y++) {
         for (int x = 0; x < mapWidth; x++) {
           if (tilemap.tiles[y * mapWidth + x].type == TileType::WALL) {
-            std::cout << "1";
             int mask = 0;
 
             bool north = isTile(tilemap.tiles, x, y-1, tilemap.width, tilemap.height);
@@ -136,11 +136,9 @@ public:
               newMap[y * mapWidth + x].tilemapIndex = 47;
             }
           } else {
-            std::cout << "0";
             newMap[y * mapWidth + x].tilemapIndex = -1;
           }
         }
-        std::cout << std::endl;
       }
 
       tilemap.tiles = newMap;
