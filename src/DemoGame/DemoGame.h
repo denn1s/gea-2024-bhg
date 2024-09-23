@@ -20,7 +20,7 @@ class SquareSpawnSetupSystem : public SetupSystem {
     square->addComponent<VelocityComponent>(300);
     square->addComponent<TextureComponent>("assets/Sprites/cat.png");
     square->addComponent<SpriteComponent>("assets/Sprites/cat.png", 8, 8, 10, 8, 1000);
-    square->addComponent<BoxColliderComponent>(SDL_Rect{0, 0, 32, 32}, SDL_Color{255, 0, 0, 255});
+    square->addComponent<BoxColliderComponent>(SDL_Rect{0, 0, 8 * 10, 8 * 10}, SDL_Color{255, 0, 0, 255});
   }
 };
 
@@ -127,8 +127,7 @@ public:
     sampleScene = new Scene("SAMPLE SCENE", r, renderer);
     addSetupSystem<CameraSetupSystem>(sampleScene);
     addSetupSystem<SquareSpawnSetupSystem>(sampleScene);
-    addSetupSystem<BackgroundSetupSystem>(sampleScene);
-    addSetupSystem<TilemapSetupSystem>(sampleScene);
+    addSetupSystem<ProceduralTilemapSetupSystem>(sampleScene);
     addSetupSystem<AdvancedAutoTilingSetupSystem>(sampleScene);
     addSetupSystem<TextureSetupSystem>(sampleScene);
     addSetupSystem<TilemapColliderSetupSystem>(sampleScene);
@@ -142,8 +141,8 @@ public:
 
     addUpdateSystem<MovementSystem>(sampleScene);
     addUpdateSystem<SpriteAnimationSystem>(sampleScene);
-    addRenderSystem<SpriteRenderSystem>(sampleScene);
     addRenderSystem<TilemapRenderSystem>(sampleScene);
+    addRenderSystem<SpriteRenderSystem>(sampleScene);
     addRenderSystem<ColliderRenderSystem>(sampleScene);
 
     setScene(sampleScene);

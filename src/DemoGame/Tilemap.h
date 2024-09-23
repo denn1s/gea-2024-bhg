@@ -4,10 +4,11 @@
 #include "Engine/Entity.h"
 #include "Engine/Systems.h"
 #include <iostream>
+#include <FastNoiseLite.h>
 
 enum class TileType {
-  NONE,
   WALL,
+  GROUND,
 };
 
 struct Tile {
@@ -33,9 +34,9 @@ class TilemapSetupSystem : public SetupSystem {
 public:
   void run() override {
     std::vector<int> initialMap = {
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 2, 0,
-      0, 0, 0, 0, 0, 0, 0, 1, 1, 0,
+      1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
+      1, 1, 1, 0, 0, 0, 0, 0, 1, 0,
+      1, 1, 1, 0, 0, 0, 0, 1, 1, 0,
       0, 0, 0, 0, 0, 1, 1, 1, 0, 0,
       0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
@@ -50,10 +51,10 @@ public:
     int tileScale = 8;
     std::vector<Tile> tiles;
     for (int i = 0; i < initialMap.size(); i++) {
-      TileType type = TileType::NONE;
+      TileType type = TileType::WALL;
       switch(initialMap[i]) {
         case 1:
-          type = TileType::WALL;
+          type = TileType::GROUND;
           break;
         case 0:
           break;
@@ -75,6 +76,60 @@ public:
   }
 };
 
+class ProceduralTilemapSetupSystem : public SetupSystem {
+public:
+  void run() override {
+    int tileMapWidth = 50;
+    int tileMapHeight = 50;
+    std::string filename = "assets/Tilesets/large.png";
+    int tileSize = 8;
+    int tileScale = 8;
+    std::vector<Tile> tiles;
+
+    FastNoiseLite noise;
+    noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+
+    std::srand(std::time(nullptr));
+    float offsetX = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    float offsetY = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    float zoom = 20.0f;
+
+    for (int i = 0; i < tileMapWidth * tileMapHeight; i++) {
+      int x = i % tileMapWidth;
+      int y = i / tileMapWidth;
+
+      Tile tile;
+      if (x < 5 && y < 5) {
+        tile = Tile{i, 0, TileType::GROUND};
+      } else {
+        float factor = noise.GetNoise(
+          (x + offsetX) * zoom, 
+          (y + offsetY) * zoom
+        ); 
+
+        if (factor < 0.5) {
+          tile = Tile{i, 0, TileType::GROUND};
+        } else {
+          tile = Tile{i, 0, TileType::WALL};
+        }
+      }
+
+      tiles.push_back(tile);
+    }
+
+    Entity* tilemapEntity = scene->createEntity("TILEMAP");
+    tilemapEntity->addComponent<TilemapComponent>(
+      filename,
+      tiles,
+      tileSize,
+      tileScale,
+      tileMapWidth,
+      tileMapHeight
+    );
+    tilemapEntity->addComponent<TextureComponent>(filename);
+  }
+};
+
 class AdvancedAutoTilingSetupSystem : public SetupSystem {
 private:
   std::unordered_map<int, int> maskToTileIndex = {
@@ -89,7 +144,7 @@ private:
 
 
   bool isTile(const std::vector<Tile>& map, int x, int y, int w, int h) {
-    return (x >= 0 && x < w && y >= 0 && y < h && map[y * w + x].type == TileType::WALL);
+    return (x >= 0 && x < w && y >= 0 && y < h && map[y * w + x].type == TileType::GROUND);
   }
 
 public:
@@ -106,7 +161,7 @@ public:
 
       for (int y = 0; y < mapHeight; y++) {
         for (int x = 0; x < mapWidth; x++) {
-          if (tilemap.tiles[y * mapWidth + x].type == TileType::WALL) {
+          if (tilemap.tiles[y * mapWidth + x].type == TileType::GROUND) {
             std::cout << "1";
             int mask = 0;
 

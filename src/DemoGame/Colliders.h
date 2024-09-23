@@ -75,7 +75,9 @@ public:
           int index = y * tilemap.width + x;
           const Tile& tile = tilemap.tiles[index];
 
-          createColliderEntity(x, y, tilemap.tileSize * tilemap.scale, tile.type);
+          if (tile.type == TileType::WALL) {
+            createColliderEntity(x, y, tilemap.tileSize * tilemap.scale, tile.type);
+          }
         }
       }
     }
