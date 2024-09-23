@@ -38,14 +38,17 @@ class ColliderRenderSystem : public RenderSystem {
 public:
   void run(SDL_Renderer* renderer) override {
     auto view = scene->r.view<PositionComponent, BoxColliderComponent>();
+    const auto& cameraPosition = scene->mainCamera->get<PositionComponent>();
+    const auto& cameraComponent = scene->mainCamera->get<CameraComponent>();
+
     for (auto entity : view) {
       auto [position, collider] = view.get<PositionComponent, BoxColliderComponent>(entity);
 
       SDL_Rect renderRect = {
-        position.x + collider.rect.x,
-        position.y + collider.rect.y,
-        collider.rect.w,
-        collider.rect.h
+        position.x + collider.rect.x - cameraPosition.x,
+        position.y + collider.rect.y - cameraPosition.y,
+        collider.rect.w * cameraComponent.zoom,
+        collider.rect.h * cameraComponent.zoom
       };
 
       SDL_SetRenderDrawColor(renderer, 

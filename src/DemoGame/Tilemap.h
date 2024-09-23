@@ -151,6 +151,9 @@ public:
 class TilemapRenderSystem : public RenderSystem {
   void run(SDL_Renderer* renderer) {
     auto view = scene->r.view<TilemapComponent, TextureComponent>();
+    const auto& cameraPosition = scene->mainCamera->get<PositionComponent>();
+    const auto& cameraComponent = scene->mainCamera->get<CameraComponent>();
+
     for (auto e : view) {
       auto tmap = view.get<TilemapComponent>(e);
       auto tex = view.get<TextureComponent>(e);
@@ -178,10 +181,10 @@ class TilemapRenderSystem : public RenderSystem {
 
             texture->render(
               scene->renderer,
-              x * tileSize,
-              y * tileSize,
-              tileSize,
-              tileSize,
+              x * tileSize - cameraPosition.x,
+              y * tileSize - cameraPosition.y,
+              tileSize * cameraComponent.zoom,
+              tileSize * cameraComponent.zoom,
               &clip
             );
           }
