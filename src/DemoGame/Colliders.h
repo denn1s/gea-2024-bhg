@@ -39,15 +39,17 @@ class ColliderRenderSystem : public RenderSystem {
 public:
   void run(SDL_Renderer* renderer) override {
     auto view = scene->r.view<PositionComponent, BoxColliderComponent>();
+    auto& cameraPosition = scene->mainCamera->get<PositionComponent>();
+    auto& cameraComponent = scene->mainCamera->get<CameraComponent>();
 
     for (auto entity : view) {
       auto [position, collider] = view.get<PositionComponent, BoxColliderComponent>(entity);
 
       SDL_Rect renderRect = {
-        position.x + collider.rect.x,
-        position.y + collider.rect.y,
-        collider.rect.w,
-        collider.rect.h,
+        position.x + collider.rect.x - cameraPosition.x,
+        position.y + collider.rect.y - cameraPosition.y,
+        collider.rect.w * cameraComponent.zoom,
+        collider.rect.h * cameraComponent.zoom,
       };
 
       SDL_SetRenderDrawColor(renderer, collider.color.r, collider.color.g, collider.color.b, collider.color.a);
@@ -108,40 +110,6 @@ public:
     }
   }
 };
-
-class TilemapEntitySetupSystem : public SetupSystem {
-public:
-  void run() override {
-    auto view = scene->r.view<TilemapComponent>();
-
-    for (auto entity : view) {
-      auto tilemap = view.get<TilemapComponent>(entity);
-
-      for (int y = 0; y < tilemap.height; y++) {
-        for (int x = 0; x < tilemap.width; x++) {
-          int index = y * tilemap.width + x;
-
-          const Tile& tile = tilemap.tiles[index];
-          createTileEntity(x, y, tilemap.tileSize * tilemap.scale, tile);
-        } 
-      }
-    }
-  }
-
-private:
-  void createTileEntity(int x, int y, int size, Tile tile) {
-    Entity* tileEntity = scene->createEntity("TILE");
-
-    tileEntity->addComponent<PositionComponent>(x * size, y * size);
-    tileEntity->addComponent<TileComponent>(tile);
-    if (tile.type == TileType::WALL) {
-      SDL_Rect colliderRect = {0, 0, size, size};
-      SDL_Color color = {0, 0, 255, 255};
-      tileEntity->addComponent<BoxColliderComponent>(colliderRect, color);
-    }
-  }
-};
-
 
 
 class PlayerTileCollisionDetectionSystem : public UpdateSystem {

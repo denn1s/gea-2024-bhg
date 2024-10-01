@@ -21,13 +21,21 @@ class SquareSpawnSetupSystem : public SetupSystem {
     square->addComponent<TextureComponent>("assets/Sprites/cat.png");
     square->addComponent<SpriteComponent>("assets/Sprites/cat.png", 8, 8, 10, 8, 1000);
     square->addComponent<BoxColliderComponent>(SDL_Rect{0, 0, 80, 80}, SDL_Color{255, 0, 0});
+  }
+};
 
-    Entity* face = scene->createEntity("face", 200, 200); 
-    face->addComponent<PowerUpComponent>();
-    face->addComponent<TextureComponent>("assets/Sprites/face.png");
-    face->addComponent<SpriteComponent>("assets/Sprites/face.png", 8, 8, 10, 0, 0);
-    face->addComponent<BoxColliderComponent>(SDL_Rect{0, 0, 80, 80}, SDL_Color{0, 255, 0});
-
+class CameraSetupSystem : public SetupSystem {
+  void run() {
+    int width = 1024;
+    int height = 768;
+    scene->mainCamera = scene->createEntity("CAMERA", 0, 0); 
+    scene->mainCamera->addComponent<CameraComponent>(
+      1,
+      width,
+      height,
+      width * 10,
+      height * 10
+    );
   }
 };
 
@@ -41,6 +49,33 @@ class MovementSystem : public UpdateSystem {
 
       pos.x += vel.x * dT;
       pos.y += vel.y * dT;
+    }
+  }
+};
+
+class CameraFollowUpdateSystem : public UpdateSystem {
+  void run(float dT) {
+    auto view = scene->r.view<PlayerComponent, PositionComponent, SpriteComponent>();
+    auto& cameraPosition = scene->mainCamera->get<PositionComponent>();
+    auto& cameraComponent = scene->mainCamera->get<CameraComponent>();
+
+    for (auto e : view) {
+      auto playerPos = view.get<PositionComponent>(e);
+      auto playerSpr = view.get<SpriteComponent>(e);
+
+      int spriteWidth = playerSpr.width * playerSpr.scale * cameraComponent.zoom;
+      int spriteHeight = playerSpr.height * playerSpr.scale * cameraComponent.zoom;
+
+      int px = playerPos.x - cameraComponent.vw / 2 + spriteWidth / 2;
+      int py = playerPos.y - cameraComponent.vh / 2 + spriteHeight / 2;
+
+      if (px > 0 && px < cameraComponent.ww - cameraComponent.vw) {
+        cameraPosition.x = px;
+      }
+
+      if (py > 0 && py < cameraComponent.wh - cameraComponent.vh) {
+        cameraPosition.y = py;
+      }
     }
   }
 };
@@ -96,28 +131,29 @@ public:
   void setup() {
     std::print("HELLO WORLD\n");  
     sampleScene = new Scene("SAMPLE SCENE", r, renderer);
+    addSetupSystem<CameraSetupSystem>(sampleScene);
     addSetupSystem<SquareSpawnSetupSystem>(sampleScene);
-    addSetupSystem<BackgroundSetupSystem>(sampleScene);
-    addSetupSystem<TilemapSetupSystem>(sampleScene);
+    addSetupSystem<ProceduralTilemapSetupSystem>(sampleScene);
     addSetupSystem<AdvancedAutoTilingSetupSystem>(sampleScene);
     addSetupSystem<TextureSetupSystem>(sampleScene);
     addSetupSystem<TilemapEntitySetupSystem>(sampleScene);
     addEventSystem<MovementInputSystem>(sampleScene);
 
-    addUpdateSystem<ColliderResetSystem>(sampleScene);
+    addUpdateSystem<CameraFollowUpdateSystem>(sampleScene);
+    /* addUpdateSystem<ColliderResetSystem>(sampleScene); */
     addUpdateSystem<SpriteMovementSystem>(sampleScene);
 
-    addUpdateSystem<PlayerPowerUpCollisionDetectionSystem>(sampleScene);
-    addUpdateSystem<PlayerPowerUpCollisionSystem>(sampleScene);
+    /* addUpdateSystem<PlayerPowerUpCollisionDetectionSystem>(sampleScene); */
+    /* addUpdateSystem<PlayerPowerUpCollisionSystem>(sampleScene); */
 
-    addUpdateSystem<PlayerTileCollisionDetectionSystem>(sampleScene);
-    addUpdateSystem<PlayerWallCollisionSystem>(sampleScene);
+    /* addUpdateSystem<PlayerTileCollisionDetectionSystem>(sampleScene); */
+    /* addUpdateSystem<PlayerWallCollisionSystem>(sampleScene); */
 
     addUpdateSystem<MovementSystem>(sampleScene);
     addUpdateSystem<SpriteAnimationSystem>(sampleScene);
-    addRenderSystem<SpriteRenderSystem>(sampleScene);
     addRenderSystem<TilemapRenderSystem>(sampleScene);
-    addRenderSystem<ColliderRenderSystem>(sampleScene);
+    addRenderSystem<SpriteRenderSystem>(sampleScene);
+    /* addRenderSystem<ColliderRenderSystem>(sampleScene); */
 
     setScene(sampleScene);
   }

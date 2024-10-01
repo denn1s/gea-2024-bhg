@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "Engine/Entity.h"
 #include "Engine/Systems.h"
 #include "Engine/Components.h"
 #include "Engine/Graphics/TextureManager.h"
@@ -19,6 +20,7 @@ struct SpriteComponent {
   Uint32 lastUpdate = 0;
   int xIndex = 0;
   int yIndex = 0; 
+  bool movesWithCamera = true;
 };
 
 
@@ -90,6 +92,9 @@ class SpriteAnimationSystem : public UpdateSystem {
 class SpriteRenderSystem : public RenderSystem {
   void run(SDL_Renderer* renderer) {
     auto view = scene->r.view<PositionComponent, SpriteComponent>();
+    auto& cameraPosition = scene->mainCamera->get<PositionComponent>();
+    auto& cameraComponent = scene->mainCamera->get<CameraComponent>();
+
     for (auto e : view) {
       auto pos = view.get<PositionComponent>(e);
       auto spr = view.get<SpriteComponent>(e);
@@ -101,7 +106,26 @@ class SpriteRenderSystem : public RenderSystem {
         spr.width,
         spr.height,
       };
-      texture->render(scene->renderer, pos.x, pos.y, spr.width * spr.scale, spr.height * spr.scale, &clip);
+
+if (spr.movesWithCamera) {
+         texture->render(
+          scene->renderer,
+          pos.x - cameraPosition.x,
+          pos.y - cameraPosition.y,
+          spr.width * spr.scale * cameraComponent.zoom,
+          spr.height * spr.scale * cameraComponent.zoom,
+          &clip
+         );
+      } else {
+         texture->render(
+          scene->renderer,
+          pos.x,
+          pos.y,
+          spr.width * spr.scale,
+          spr.height * spr.scale,
+          &clip
+         );
+      }
     }
   }
 }; 

@@ -1,13 +1,16 @@
 #pragma once
+#include <cstdlib>
 #include <string>
 #include "Sprites.h"
 #include "Engine/Entity.h"
 #include "Engine/Systems.h"
+#include <FastNoiseLite.h>
 #include <iostream>
 
 enum class TileType {
   NONE,
   WALL,
+  GROUND,
   TRIGGER,
 };
 
@@ -34,9 +37,9 @@ class TilemapSetupSystem : public SetupSystem {
 public:
   void run() override {
     std::vector<int> initialMap = {
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
-      0, 0, 0, 0, 0, 0, 0, 1, 1, 0,
+      1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
+      1, 1, 1, 0, 0, 0, 0, 0, 1, 0,
+      1, 1, 1, 0, 0, 0, 0, 1, 1, 0,
       0, 0, 0, 0, 0, 1, 1, 1, 0, 0,
       0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
@@ -51,10 +54,10 @@ public:
     int tileScale = 8;
     std::vector<Tile> tiles;
     for (int i = 0; i < initialMap.size(); i++) {
-      TileType type = TileType::NONE;
+      TileType type = TileType::WALL;
       switch(initialMap[i]) {
         case 1:
-          type = TileType::WALL;
+          type = TileType::GROUND;
           break;
         case 0:
           break;
@@ -76,6 +79,63 @@ public:
   }
 };
 
+
+class ProceduralTilemapSetupSystem : public SetupSystem {
+public:
+  void run() override {
+    std::string filename = "assets/Tilesets/large.png";
+    int tileSize = 8;
+    int tileScale = 10;
+    int tileMapWidth = 100;
+    int tileMapHeight = 100;
+    
+    FastNoiseLite noise;
+    noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+
+    std::srand(std::time(nullptr));
+    float offsetX = rand() / RAND_MAX; 
+    float offsetY = rand() / RAND_MAX; 
+    float zoom = 10.0f;
+
+    std::vector<Tile> tiles;
+    for (int i = 0; i < tileMapWidth * tileMapHeight; i++) {
+      int x = i % tileMapWidth;
+      int y = i / tileMapHeight;
+
+      Tile tile;
+      if (x < 5 && y < 5) {
+        tile = Tile{i, 0, TileType::GROUND};
+      } else {
+          
+        float factor = noise.GetNoise(
+          (x + offsetX) * zoom,
+          (y + offsetY) * zoom
+        );
+
+        if (factor > 0.5) {
+          tile = Tile{i, 0, TileType::WALL};
+        } else {
+          tile = Tile{i, 0, TileType::GROUND};
+        }
+
+
+      }
+      tiles.push_back(tile);
+    }
+
+    Entity* tilemapEntity = scene->createEntity("TILEMAP");
+    tilemapEntity->addComponent<TilemapComponent>(
+      filename,
+      tiles,
+      tileSize,
+      tileScale,
+      tileMapWidth,
+      tileMapHeight
+    );
+    tilemapEntity->addComponent<TextureComponent>(filename);
+  }
+};
+
 class AdvancedAutoTilingSetupSystem : public SetupSystem {
 private:
   std::unordered_map<int, int> maskToTileIndex = {
@@ -90,7 +150,7 @@ private:
 
 
   bool isTile(const std::vector<Tile>& map, int x, int y, int w, int h) {
-    return (x >= 0 && x < w && y >= 0 && y < h && map[y * w + x].type == TileType::WALL);
+    return (x >= 0 && x < w && y >= 0 && y < h && map[y * w + x].type == TileType::GROUND);
   }
 
 public:
@@ -107,7 +167,7 @@ public:
 
       for (int y = 0; y < mapHeight; y++) {
         for (int x = 0; x < mapWidth; x++) {
-          if (tilemap.tiles[y * mapWidth + x].type == TileType::WALL) {
+          if (tilemap.tiles[y * mapWidth + x].type == TileType::GROUND) {
             int mask = 0;
 
             bool north = isTile(tilemap.tiles, x, y-1, tilemap.width, tilemap.height);
@@ -149,10 +209,12 @@ public:
 class TilemapRenderSystem : public RenderSystem {
   void run(SDL_Renderer* renderer) {
     auto view = scene->r.view<TilemapComponent, TextureComponent>();
+    auto& cameraPosition = scene->mainCamera->get<PositionComponent>();
+    auto& cameraComponent = scene->mainCamera->get<CameraComponent>();
+
     for (auto e : view) {
       auto tmap = view.get<TilemapComponent>(e);
       auto tex = view.get<TextureComponent>(e);
-
       Texture* texture = TextureManager::GetTexture(tex.filename);
 
       int tileSize = tmap.tileSize * tmap.scale;
@@ -176,10 +238,10 @@ class TilemapRenderSystem : public RenderSystem {
 
             texture->render(
               scene->renderer,
-              x * tileSize,
-              y * tileSize,
-              tileSize,
-              tileSize,
+              x * tileSize - cameraPosition.x,
+              y * tileSize - cameraPosition.y,
+              tileSize * cameraComponent.zoom,
+              tileSize * cameraComponent.zoom,
               &clip
             );
           }
@@ -188,6 +250,23 @@ class TilemapRenderSystem : public RenderSystem {
     }
   }
 }; 
+
+class TilemapEntitySetupSystem : public SetupSystem {
+public:
+  void run() override {
+    auto view = scene->r.view<TilemapComponent>();
+
+    for (auto entity : view) {
+      auto tilemap = view.get<TilemapComponent>(entity);
+
+      for (int y = 0; y < tilemap.height; y++) {
+        for (int x = 0; x < tilemap.width; x++) {
+          int index = y * tilemap.width + x;
+       } 
+      }
+    }
+  }
+};
 
 
 
