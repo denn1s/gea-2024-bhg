@@ -8,6 +8,7 @@
 #include "Sprites.h"
 #include "Camera.h"
 #include "Tilemap.h"
+#include "Sound.h"
 
 #include <SDL2/SDL.h>
 #include <SDL_events.h>
@@ -123,8 +124,24 @@ public:
 
         b2Vec2 impulse(0, -JUMP_FORCE);
         b2Body_ApplyLinearImpulseToCenter(rigidBody.bodyId, impulse, true);
+        playJumpSound();
       }
     }
+  }
+private:
+  void playJumpSound() {
+    auto view = scene->r.view<SoundComponent>();
+
+    for (auto entity : view) {
+      auto& soundComponent = view.get<SoundComponent>(entity);
+      if (soundComponent.type == SoundType::EFFECT && soundComponent.filename == "assets/Sounds/jump.wav") {
+        if (soundComponent.channel) {
+          soundComponent.channel->stop();
+        }
+        game->soundManager->playSound(soundComponent.sound, nullptr, false, &soundComponent.channel);
+      }
+    }
+
   }
 };
 
@@ -181,6 +198,12 @@ public:
     addSetupSystem<AdvancedAutoTilingSetupSystem>(gameScene);
 
     addSetupSystem<TextureSetupSystem>(gameScene);
+
+    // sound systems
+    addSetupSystem<BackgroundMusicSetupSystem>(gameScene);
+    addSetupSystem<FxMusicSetupSystem>(gameScene);
+    addSetupSystem<SoundSetupSystem>(gameScene);
+    addSetupSystem<BackgroundMusicPlaySetupSystem>(gameScene);
 
     // update systems
     addUpdateSystem<SpriteAnimationSystem>(gameScene);
