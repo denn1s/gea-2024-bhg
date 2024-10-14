@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "Tilemap.h"
 #include "Sound.h"
+#include "Enemy.h"
 
 #include <SDL2/SDL.h>
 #include <SDL_events.h>
@@ -201,9 +202,9 @@ public:
 
     // sound systems
     addSetupSystem<BackgroundMusicSetupSystem>(gameScene);
-    addSetupSystem<FxMusicSetupSystem>(gameScene);
+    /* addSetupSystem<FxMusicSetupSystem>(gameScene); */
     addSetupSystem<SoundSetupSystem>(gameScene);
-    addSetupSystem<BackgroundMusicPlaySetupSystem>(gameScene);
+    /* addSetupSystem<BackgroundMusicPlaySetupSystem>(gameScene); */
 
     // update systems
     addUpdateSystem<SpriteAnimationSystem>(gameScene);
@@ -212,12 +213,15 @@ public:
     addUpdateSystem<PositionUpdateSystem>(gameScene);
     addUpdateSystem<CameraFollowUpdateSystem>(gameScene);
     addUpdateSystem<PlayerJumpAnimationUpdateSystem>(gameScene);
+    addUpdateSystem<EnemySpawnSystem>(gameScene);
+    addUpdateSystem<LuaScriptSetupSystem>(gameScene);
+    addUpdateSystem<EnemyMoveScriptSystem>(gameScene);
 
     // input systems
     addEventSystem<PlayerInputSystem>(gameScene);
 
     // render systems
-    addRenderSystem<TilemapRenderSystem>(gameScene);
+    /* addRenderSystem<TilemapRenderSystem>(gameScene); */
     addRenderSystem<SpriteRenderSystem>(gameScene);
 
     setScene(gameScene);

@@ -14,8 +14,8 @@
 
 class CameraSetupSystem : public SetupSystem {
   void run() {
-    int width = 1024;
-    int height = 768;
+    int width = 1900;
+    int height = 1080;
     scene->mainCamera = scene->createEntity("CAMERA", 0, 0); 
     scene->mainCamera->addComponent<CameraComponent>(
       1,
