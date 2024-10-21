@@ -16,9 +16,9 @@ struct EnemyComponent {
 };
 
 struct LuaScriptComponent {
-  std::string scriptPath;
+  std::string path;
   sol::environment env;
-  sol::function updateFunc;
+  sol::function update;
 };
 
 class EnemySpawnSystem : public UpdateSystem {
@@ -41,7 +41,7 @@ private:
 
 public:
   EnemySpawnSystem() : lastSpawnTime(0) {
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    unsigned seed = SDL_GetTicks();
     rng = std::mt19937(seed);
   }
 
@@ -86,8 +86,8 @@ private:
   void initializeScript(LuaScriptComponent& script) {
     try {
       script.env = sol::environment(lua, sol::create, lua.globals());
-      lua.script_file(script.scriptPath, script.env);
-      script.updateFunc = script.env["update"];
+      lua.script_file(script.path, script.env);
+      script.update = script.env["update"];
     } catch (const sol::error& e) {
       std::cerr << "Error initializing Lua script: " << e.what() << std::endl;
     }
@@ -108,21 +108,21 @@ public:
       auto& enemyPos = enemyView.get<PositionComponent>(entity);
       auto& script = enemyView.get<LuaScriptComponent>(entity);
 
-      if (script.env != sol::nil && script.updateFunc.valid()) {
-        sol::table params = script.env.create();
-        params["deltaTime"] = dT;
-        params["time"] = SDL_GetTicks() / 1000.0f;
-        params["playerX"] = playerPos.x;
-        params["playerY"] = playerPos.y;
-        params["enemyX"] = enemyPos.x;
-        params["enemyY"] = enemyPos.y;
+      if (script.env != sol::nil && script.update.valid()) {
+        sol::table in = script.env.create();
+        in["deltaTime"] = dT;
+        in["time"] = SDL_GetTicks() / 1000.0f;
+        in["playerX"] = playerPos.x;
+        in["playerY"] = playerPos.y;
+        in["enemyX"] = enemyPos.x;
+        in["enemyY"] = enemyPos.y;
 
-        auto result = script.updateFunc(params);
+        auto result = script.update(in);
 
         if (result.valid()) {
-          sol::table newPos = result;
-          enemyPos.x = newPos["x"].get<int>();
-          enemyPos.y = newPos["y"].get<int>();
+          sol::table out = result;
+          enemyPos.x = out["x"].get<int>();
+          enemyPos.y = out["y"].get<int>();
         } else {
           sol::error err = result;
           std::cerr << "Error running Lua script: " << err.what() << std::endl;
