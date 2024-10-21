@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <iostream>
 #include "Engine/Entity.h"
 #include "Engine/Systems.h"
 #include "Engine/Components.h"
@@ -100,13 +101,17 @@ class SpriteRenderSystem : public RenderSystem {
       auto spr = view.get<SpriteComponent>(e);
 
       Texture* texture = TextureManager::GetTexture(spr.filename);
+
+      if (texture == nullptr) {
+        continue;
+        }
+
       SDL_Rect clip = {
         spr.xIndex * spr.width,
         spr.yIndex * spr.height,
         spr.width,
         spr.height,
       };
-
 if (spr.movesWithCamera) {
          texture->render(
           scene->renderer,

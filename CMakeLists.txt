@@ -20,10 +20,14 @@ add_executable(
 find_package(SDL2 REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
+
 set(BOX2D_INCLUDE_DIR "/usr/include/box2d")
 set(BOX2D_LIBRARY "/usr/lib/libbox2d.so")
 set(FMOD_INCLUDE_DIR "/usr/include/fmod")
 set(FMOD_LIBRARY "/usr/lib/libfmod.so")
+
+# Find Lua
+find_package(Lua REQUIRED)
 
 target_include_directories(game  
   PUBLIC src
@@ -31,6 +35,7 @@ target_include_directories(game
   PUBLIC ${SDL2_IMAGE_INCLUDE_DIRS}
   PUBLIC ${BOX2D_INCLUDE_DIRS}
   PUBLIC ${FMOD_INCLUDE_DIRS}
+  PUBLIC ${LUA_INCLUDE_DIR}
 )
 
 target_link_libraries(game
@@ -38,4 +43,6 @@ target_link_libraries(game
   ${SDL2_IMAGE_LIBRARIES}
   ${BOX2D_LIBRARY}
   ${FMOD_LIBRARY}
+  ${LUA_LIBRARIES}
 )
+
