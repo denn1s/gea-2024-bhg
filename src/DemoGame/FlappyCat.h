@@ -216,6 +216,7 @@ public:
     addUpdateSystem<EnemySpawnSystem>(gameScene);
     addUpdateSystem<LuaScriptSetupSystem>(gameScene);
     addUpdateSystem<EnemyMoveScriptSystem>(gameScene);
+    addUpdateSystem<EnemyLifetimeSystem>(gameScene);
 
     // input systems
     addEventSystem<PlayerInputSystem>(gameScene);

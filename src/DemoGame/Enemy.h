@@ -111,6 +111,7 @@ public:
       if (script.env != sol::nil && script.updateFunc.valid()) {
         sol::table params = script.env.create();
         params["deltaTime"] = dT;
+        params["time"] = SDL_GetTicks() / 1000.0f;
         params["playerX"] = playerPos.x;
         params["playerY"] = playerPos.y;
         params["enemyX"] = enemyPos.x;
@@ -131,3 +132,19 @@ public:
   }
 };
 
+class EnemyLifetimeSystem : public UpdateSystem {
+public:
+    void run(float dT) override {
+        auto view = scene->r.view<EnemyComponent>();
+        float currentTime = SDL_GetTicks() / 1000.0f;
+
+        for (auto entity : view) {
+            auto& enemy = view.get<EnemyComponent>(entity);
+            
+            if (currentTime - enemy.spawnTime > 5.0f) {
+        std::cout << "destroy enemy" << std::endl;
+                scene->r.destroy(entity);
+            }
+        }
+    }
+};
